@@ -336,11 +336,15 @@ void cadastrar_pessoa()
 
     nova_pessoa.IdPessoa = gerar_IdPessoa();
 
-    int confirmar = 0;
-    printf("Confirmar cadastro de %s (1 - Confirmar / 2 - Cancelar): ", nova_pessoa.nome);
-    scanf("%d", &confirmar);
+    char confirmar;
+    limpar_buffer_entrada();
+    printf("Confirmar cadastro de %s?\n", nova_pessoa.nome);
+    printf("[s] Sim\n");
+    printf("[n] Não\n");
+    printf("Escolha uma opção: ");
+    scanf("%c", &confirmar);
 
-    if (confirmar == 1)
+    if (confirmar == 's' || confirmar == 'S')
     {
         if (salvar_pessoa(nova_pessoa))
             printf("\n%s salvo com sucesso!\n", nova_pessoa.nome);
@@ -352,7 +356,7 @@ void cadastrar_pessoa()
     }
     else
     {
-        printf("\ncancelado!\n");
+        printf("\nCancelado!\n");
         return;
     }
 
@@ -435,10 +439,13 @@ void cadastrar_telefone(int metodo_busca, int index_pessoa_existente)
         // Limpar o buffer antes de ler continuar_cadastro
         limpar_buffer_entrada();
 
-        printf("Deseja continuar o cadastro de telefones?\ns - SIM\nn - NÃO\n: ");
+        printf("Deseja continuar o cadastro de telefones?\n");
+        printf("[s] Sim\n");
+        printf("[n] Não\n");
+        printf("Escolha uma opção: ");
         scanf("%c", &continuar_cadastro);
 
-    } while (continuar_cadastro == 's');
+    } while (continuar_cadastro == 's' || continuar_cadastro == 'S');
 }
 
 bool salvar_telefones(TELEFONE telefones[], int qtd_numeros_novos)
@@ -597,10 +604,17 @@ void editar_telefones(int metodo_busca)
         printf("Telefone alterado com sucesso!\n");
         reescrever_telefones();
 
+        // Limpar o buffer antes de ler continuar_cadastro
         limpar_buffer_entrada();
-        printf("Deseja editar outro telefone de %s?\ns - SIM\nn - NÃO\ncontinuar? : ", LISTA_PESSOAS[index_pessoa].nome);
+
+        printf("Deseja editar outro telefone?\n");
+        printf("[s] Sim\n");
+        printf("[n] Não\n");
+        printf("Escolha uma opção: ");
         scanf("%c", &continuar_edicao);
-    } while (continuar_edicao == 's');
+    } while (continuar_edicao == 's' || continuar_edicao == 'S');
+
+    printf("Telefones editados com sucesso!\n");
 }
 
 void excluir_pessoa(int metodo_busca)
@@ -612,11 +626,20 @@ void excluir_pessoa(int metodo_busca)
         return;
     }
 
-    int confirmar;
-    printf("Deseja excluir %s?\n1 - SIM\n2 - NÃO\nexcluir? : ", LISTA_PESSOAS[index_pessoa].nome);
-    scanf("%d", &confirmar);
+    char confirmar;
+    printf("Deseja excluir %s?\n", LISTA_PESSOAS[index_pessoa].nome);
+    printf("[s] Sim\n");
+    printf("[n] Não\n");
+    printf("Escolha uma opção: ");
+    if (metodo_busca == 1)
+        scanf("%c", &confirmar);
+    else
+    {
+        limpar_buffer_entrada();
+        scanf("%c", &confirmar);
+    }
 
-    if (confirmar == 1)
+    if (confirmar == 's' || confirmar == 'S')
     {
         // remover telefones
         for (int i = 0; i < QTD_TELEFONES; i++)
@@ -674,18 +697,27 @@ void excluir_telefone(int metodo_busca)
             break;
     } while (1);
 
-    int confirmar;
-    printf("Deseja excluir o número %s de %s?\n1 - SIM\n2 - NÃO\nexcluir? : ", LISTA_TELEFONES[index_telefone].telefone, LISTA_PESSOAS[index_pessoa].nome);
-    scanf("%d", &confirmar);
+    char confirmar;
+    limpar_buffer_entrada();
+    printf("Deseja excluir o número %s de %s?\n", LISTA_TELEFONES[index_telefone].telefone, LISTA_PESSOAS[index_pessoa].nome);
+    printf("[s] Sim\n");
+    printf("[n] Não\n");
+    printf("Escolha uma opção: ");
+    scanf("%c", &confirmar);
 
-    for (int i = index_telefone; i < QTD_TELEFONES - 1; i++)
+    if (confirmar == 's' || confirmar == 'S')
     {
-        LISTA_TELEFONES[i] = LISTA_TELEFONES[i + 1];
-    }
-    QTD_TELEFONES--;
+        for (int i = index_telefone; i < QTD_TELEFONES - 1; i++)
+        {
+            LISTA_TELEFONES[i] = LISTA_TELEFONES[i + 1];
+        }
+        QTD_TELEFONES--;
 
-    reescrever_telefones();
-    printf("Telefone excluído com sucesso!\n");
+        reescrever_telefones();
+        printf("Telefone excluído com sucesso!\n");
+    }
+    else
+        printf("Exclusão cancelada!\n");
 }
 
 void consultar_pessoa(int metodo_busca)
@@ -698,7 +730,7 @@ void consultar_pessoa(int metodo_busca)
     }
     printf("\n");
     printf("============================================\n");
-    printf("           Informações de %s\n", LISTA_PESSOAS[index_pessoa].nome);
+    printf(" Informações de %s\n", LISTA_PESSOAS[index_pessoa].nome);
     printf("============================================\n");
     printf(" - ID:                 %d\n", LISTA_PESSOAS[index_pessoa].IdPessoa);
     printf(" - Nome:               %s\n", LISTA_PESSOAS[index_pessoa].nome);
