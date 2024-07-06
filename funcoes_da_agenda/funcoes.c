@@ -34,7 +34,7 @@ void limpar_memoria();
 void reescrever_pessoas();
 void reescrever_telefones();
 int buscar_pessoa(int metodo);
-int buscar_pessoa_nome(char nome[31]);
+int buscar_pessoa_nome(const char *nome);
 int buscar_pessoa_IdPessoa(int id);
 int gerar_IdPessoa();
 int gerar_IdTelefone();
@@ -43,6 +43,33 @@ void cadastrar_telefone(int metodo_busca, int index_pessoa_existente);
 bool salvar_telefones(TELEFONE telefones[], int qtd_numeros_novos);
 
 // funções
+char *input()
+{
+    char buffer[1024];
+    char *string = NULL;
+    size_t tamanho = 0;
+
+    if (fgets(buffer, sizeof(buffer), stdin))
+    {
+        tamanho = strlen(buffer);
+
+        // Remove o caractere '\n' do final, se presente
+        if (buffer[tamanho - 1] == '\n')
+        {
+            buffer[tamanho - 1] = '\0';
+            tamanho--;
+        }
+
+        string = malloc(tamanho + 1); // +1 para o caractere '\0'
+        if (string)
+        {
+            strcpy(string, buffer);
+        }
+    }
+
+    return string;
+}
+
 int contar_registros(const char *nome_arquivo)
 {
     FILE *arquivo = fopen(nome_arquivo, "r");
@@ -217,7 +244,7 @@ void limpar_buffer_entrada()
         ;
 }
 
-int buscar_pessoa_nome(char nome[31])
+int buscar_pessoa_nome(const char *nome)
 {
     for (int i = 0; i < QTD_PESSOAS; i++)
     {
@@ -245,16 +272,12 @@ int buscar_pessoa(int metodo)
     // busca por nome
     if (metodo == 1)
     {
-        char nome[31];
         printf("Digite o nome do contato: ");
         limpar_buffer_entrada();
-        fgets(nome, sizeof(nome), stdin);
-        // remove caractere da nova linha, se presente
-        size_t len = strlen(nome);
-        if (len > 0 && nome[len - 1] == '\n')
-            nome[len - 1] = '\0';
-
-        return buscar_pessoa_nome(nome);
+        char *nome = input();
+        int index = buscar_pessoa_nome(nome);
+        free(nome);
+        return index;
     }
     // busca por ID
     if (metodo == 2)
@@ -281,16 +304,17 @@ void cadastrar_pessoa()
 {
     printf("Cadastrar Pessoa: \n");
     PESSOA nova_pessoa;
+    limpar_buffer_entrada();
+
+    char *nome;
     do
     {
         printf("Nome: ");
-        limpar_buffer_entrada();
-        fgets(nova_pessoa.nome, sizeof(nova_pessoa.nome), stdin);
-        // Remove o caractere de nova linha, se presente
-        size_t len = strlen(nova_pessoa.nome);
-        if (len > 0 && nova_pessoa.nome[len - 1] == '\n')
-            nova_pessoa.nome[len - 1] = '\0';
-    } while (!nome_valido(nova_pessoa.nome) || buscar_pessoa_nome(nova_pessoa.nome) != -1);
+        nome = input();
+    } while (!nome_valido(nome) || buscar_pessoa_nome(nome) != -1);
+    strncpy(nova_pessoa.nome, nome, sizeof(nova_pessoa.nome) - 1);
+    nova_pessoa.nome[sizeof(nova_pessoa.nome) - 1] = '\0'; // coloca o caractere '\0' no final do nome que foi cadastrado
+    free(nome);
 
     do
     {
@@ -445,6 +469,7 @@ void editar_pessoa(int metodo_busca)
         printf("Contato não encontrado\n");
         return;
     }
+
     int campo;
     do
     {
@@ -454,21 +479,18 @@ void editar_pessoa(int metodo_busca)
         {
         case 1:
         {
-            char novo_nome[31];
+            char *novo_nome;
+            limpar_buffer_entrada();
             do
             {
                 printf("Digite o novo nome para %s: ", LISTA_PESSOAS[index_pessoa].nome);
-                limpar_buffer_entrada();
-                fgets(novo_nome, sizeof(novo_nome), stdin);
-                // remove caractere da nova linha, se presente
-                size_t len = strlen(novo_nome);
-                if (len > 0 && novo_nome[len - 1] == '\n')
-                    novo_nome[len - 1] = '\0';
+                novo_nome = input();
                 if (!nome_valido(novo_nome))
                     printf("Nome inválido\n");
             } while (!nome_valido(novo_nome));
 
-            strcpy(LISTA_PESSOAS[index_pessoa].nome, novo_nome);
+            strncpy(LISTA_PESSOAS[index_pessoa].nome, novo_nome, sizeof(LISTA_PESSOAS[index_pessoa].nome));
+            LISTA_PESSOAS[index_pessoa].nome[sizeof(LISTA_PESSOAS[index_pessoa].nome) - 1] = '\0'; // coloca o caractere '\0' no final do nome que foi cadastrado
             reescrever_pessoas();
             printf("Nome alterado!\n");
             campo = 0;
@@ -674,7 +696,6 @@ void consultar_pessoa(int metodo_busca)
         printf("Contato não encontrado\n");
         return;
     }
-
     printf("\n");
     printf("============================================\n");
     printf("           Informações de %s\n", LISTA_PESSOAS[index_pessoa].nome);
@@ -695,7 +716,6 @@ void consultar_telefones(int metodo_busca)
         printf("Contato não encontrado\n");
         return;
     }
-
     printf("\n");
     printf("============================================\n");
     printf("          Telefones de %s\n", LISTA_PESSOAS[index_pessoa].nome);
@@ -709,8 +729,6 @@ void consultar_telefones(int metodo_busca)
         }
     }
     if (contador_telefones == 0)
-    {
         printf(" Nenhum telefone cadastrado.\n");
-    }
     printf("============================================\n");
 }
