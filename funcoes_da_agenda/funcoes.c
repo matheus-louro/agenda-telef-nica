@@ -40,7 +40,7 @@ int gerar_IdPessoa();
 int gerar_IdTelefone();
 bool salvar_pessoa(PESSOA pessoa);
 void cadastrar_telefone(int metodo_busca, int index_pessoa_existente);
-bool salvar_telefones(TELEFONE telefones[], int qtd_numeros_novos);
+bool salvar_telefone(TELEFONE telefone);
 
 // funções
 char *input()
@@ -402,31 +402,23 @@ void cadastrar_telefone(int metodo_busca, int index_pessoa_existente)
     else
         index_pessoa = index_pessoa_existente;
 
-    char *nome_contato = LISTA_PESSOAS[index_pessoa].nome;
-    int id_pessoa = LISTA_PESSOAS[index_pessoa].IdPessoa;
-
     printf("\nCadastrar Telefone: \n");
-    int qtd_novos_telefones = 0;
-    printf("insira quantos telefones você irá cadastrar para %s: ", nome_contato);
-    scanf("%d", &qtd_novos_telefones);
 
-    TELEFONE novos_telefones[qtd_novos_telefones];
-
-    int numeros_cadastrados = 0;
+    TELEFONE novo_telefone;
+    printf("Cadastrando telefone para %s\n", LISTA_PESSOAS[index_pessoa].nome);
     char continuar_cadastro;
     do
     {
         printf("Insiria o número de telefone (apenas números e DDD incluso): ");
-        scanf("%s", novos_telefones[numeros_cadastrados].telefone);
+        scanf("%s", novo_telefone.telefone);
 
-        if (!telefone_valido(novos_telefones[numeros_cadastrados].telefone))
+        if (!telefone_valido(novo_telefone.telefone))
             continue;
 
-        novos_telefones[numeros_cadastrados].IdPessoa = id_pessoa;
-        novos_telefones[numeros_cadastrados].IdTelefone = gerar_IdTelefone();
-        numeros_cadastrados++;
+        novo_telefone.IdPessoa = LISTA_PESSOAS[index_pessoa].IdPessoa;
+        novo_telefone.IdTelefone = gerar_IdTelefone();
 
-        if (salvar_telefones(novos_telefones, numeros_cadastrados))
+        if (salvar_telefone(novo_telefone))
             printf("\nTelefone cadastrado com sucesso!\n");
         else
         {
@@ -434,8 +426,6 @@ void cadastrar_telefone(int metodo_busca, int index_pessoa_existente)
             return;
         }
 
-        if (numeros_cadastrados >= qtd_novos_telefones)
-            break;
         // Limpar o buffer antes de ler continuar_cadastro
         limpar_buffer_entrada();
 
@@ -448,21 +438,17 @@ void cadastrar_telefone(int metodo_busca, int index_pessoa_existente)
     } while (continuar_cadastro == 's' || continuar_cadastro == 'S');
 }
 
-bool salvar_telefones(TELEFONE telefones[], int qtd_numeros_novos)
+bool salvar_telefone(TELEFONE telefone)
 {
     // redimensionar a lista de telefones
-    LISTA_TELEFONES = (TELEFONE *)realloc(LISTA_TELEFONES, (QTD_TELEFONES + qtd_numeros_novos) * sizeof(TELEFONE));
+    LISTA_TELEFONES = (TELEFONE *)realloc(LISTA_TELEFONES, (QTD_TELEFONES + 1) * sizeof(TELEFONE));
     if (LISTA_TELEFONES == NULL)
     {
         printf("Erro ao realocar memória para LISTA_TELEFONES\n");
         return false;
     }
-    for (int i = 0; i < qtd_numeros_novos; i++)
-    {
-        LISTA_TELEFONES[QTD_TELEFONES + i] = telefones[i];
-    }
-    QTD_TELEFONES += qtd_numeros_novos;
-
+    LISTA_TELEFONES[QTD_TELEFONES] = telefone;
+    QTD_TELEFONES++;
     reescrever_telefones();
 
     return true;
