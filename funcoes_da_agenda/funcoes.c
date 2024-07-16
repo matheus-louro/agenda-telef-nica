@@ -5,21 +5,28 @@
 
 #include "../validacoes/validacoes.h"
 #include "../menus/menu_templates.h"
+
+#define TAMANHO_NOME 31
+#define TAMANHO_DATA_DE_NASCIMENTO 11
+#define TAMANHO_CPF 12
+#define TAMANHO_EMAIL 100
+#define TAMANHO_TELEFONE 14
+
 // structs
 typedef struct p
 {
     int IdPessoa;
-    char nome[31];
-    char data_de_nascimento[11];
-    char cpf[12];
-    char email[100];
+    char nome[TAMANHO_NOME];
+    char data_de_nascimento[TAMANHO_DATA_DE_NASCIMENTO];
+    char cpf[TAMANHO_CPF];
+    char email[TAMANHO_EMAIL];
 } PESSOA;
 
 typedef struct t
 {
     int IdTelefone;
     int IdPessoa;
-    char telefone[14];
+    char telefone[TAMANHO_TELEFONE];
 } TELEFONE;
 
 // vetores de structs dinamicamente alocados
@@ -53,14 +60,13 @@ char *input()
     {
         tamanho = strlen(buffer);
 
-        // Remove o caractere '\n' do final, se presente
         if (buffer[tamanho - 1] == '\n')
         {
             buffer[tamanho - 1] = '\0';
             tamanho--;
         }
 
-        string = malloc(tamanho + 1); // +1 para o caractere '\0'
+        string = malloc(tamanho + 1);
         if (string)
         {
             strcpy(string, buffer);
@@ -81,9 +87,11 @@ int contar_registros(const char *nome_arquivo)
 
     int linhas = 0;
     char caracter;
+    bool tem_dados = false;
     fseek(arquivo, 0, SEEK_SET);
     while ((caracter = fgetc(arquivo)) != EOF)
     {
+        tem_dados = true;
         if (caracter == '\n')
             linhas++;
     }
@@ -112,6 +120,25 @@ void limpar_memoria()
     exit(0);
 }
 
+void inicializar_arquivos()
+{
+    FILE *arquivo_pessoas = fopen("pessoas.txt", "a");
+    if (arquivo_pessoas == NULL)
+    {
+        printf("Erro ao criar pessoas.txt\n");
+        exit(EXIT_FAILURE);
+    }
+    fclose(arquivo_pessoas);
+
+    FILE *arquivo_telefones = fopen("telefones.txt", "a");
+    if (arquivo_telefones == NULL)
+    {
+        printf("Erro ao criar telefones.txt\n");
+        exit(EXIT_FAILURE);
+    }
+    fclose(arquivo_telefones);
+}
+
 bool carregar_pessoas()
 {
     FILE *arquivo_pessoas = fopen("pessoas.txt", "r");
@@ -122,9 +149,21 @@ bool carregar_pessoas()
         return false;
     }
 
+    if (QTD_PESSOAS == 1) 
+    {
+        LISTA_PESSOAS[0].IdPessoa = 0;
+        strcpy(LISTA_PESSOAS[0].nome, "nome");
+        strcpy(LISTA_PESSOAS[0].data_de_nascimento, "data");
+        strcpy(LISTA_PESSOAS[0].cpf, "CPF");
+        strcpy(LISTA_PESSOAS[0].email, "E-mail");
+
+        fclose(arquivo_pessoas);
+        return true;
+    }
+
     for (int i = 0; i < QTD_PESSOAS; i++)
     {
-        int itens_lidos = fscanf(arquivo_pessoas, "%d;%29[^;];%10[^;];%11[^;];%99[^\n]\n",
+        int itens_lidos = fscanf(arquivo_pessoas, "%d;%30[^;];%10[^;];%11[^;];%99[^\n]\n",
                                  &LISTA_PESSOAS[i].IdPessoa,
                                  LISTA_PESSOAS[i].nome,
                                  LISTA_PESSOAS[i].data_de_nascimento,
@@ -132,13 +171,16 @@ bool carregar_pessoas()
                                  LISTA_PESSOAS[i].email);
         if (itens_lidos != 5)
         {
-            if (i != 0) // Caso o arquivo esteja vazio, a lista iniciará vazia, caso contrário, irá emitir esse erro
-            {
-                printf("Erro ao ler linha %d do arquivo pessoas.txt\n", i + 1);
-                limpar_memoria();
-                fclose(arquivo_pessoas);
-                return false;
-            }
+            printf("ITENS LIDOS: %d\n", itens_lidos);
+            printf("PESSOA: %d\n", LISTA_PESSOAS[i].IdPessoa);
+            printf("PESSOA: %s\n", LISTA_PESSOAS[i].nome);
+            printf("PESSOA: %s\n", LISTA_PESSOAS[i].data_de_nascimento);
+            printf("PESSOA: %s\n", LISTA_PESSOAS[i].cpf);
+            printf("PESSOA: %s\n", LISTA_PESSOAS[i].email);
+            printf("Erro ao ler linha %d do arquivo pessoas.txt\n", i + 1);
+            limpar_memoria();
+            fclose(arquivo_pessoas);
+            return false;
         }
     }
     fclose(arquivo_pessoas);
@@ -156,12 +198,30 @@ bool carregar_telefones()
         return false;
     }
 
+    if (QTD_TELEFONES == 1)
+    {
+        LISTA_TELEFONES[0].IdTelefone = 0;
+        LISTA_TELEFONES[0].IdPessoa = 0;
+        strcpy(LISTA_TELEFONES[0].telefone, "telefone");
+
+        fclose(arquivo_telefones);
+        return true;
+    }
+
     for (int i = 0; i < QTD_TELEFONES; i++)
     {
-        fscanf(arquivo_telefones, "%d;%d;%13[^\n]\n",
+        int itens_lidos = fscanf(arquivo_telefones, "%d;%d;%13[^\n]\n",
                &LISTA_TELEFONES[i].IdTelefone,
                &LISTA_TELEFONES[i].IdPessoa,
                LISTA_TELEFONES[i].telefone);
+
+        if (itens_lidos != 3) 
+        {
+            printf("Erro ao ler linha %d do arquivo telefones.txt\n", i + 1);
+            limpar_memoria();
+            fclose(arquivo_telefones);
+            return false;
+        }
     }
     fclose(arquivo_telefones);
 
@@ -170,6 +230,8 @@ bool carregar_telefones()
 
 bool carregar_arquivos_na_memoria()
 {
+    inicializar_arquivos();
+
     QTD_PESSOAS = contar_registros("pessoas.txt");
     QTD_TELEFONES = contar_registros("telefones.txt");
 
