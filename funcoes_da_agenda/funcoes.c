@@ -172,11 +172,6 @@ bool carregar_pessoas()
         if (itens_lidos != 5)
         {
             printf("ITENS LIDOS: %d\n", itens_lidos);
-            printf("PESSOA: %d\n", LISTA_PESSOAS[i].IdPessoa);
-            printf("PESSOA: %s\n", LISTA_PESSOAS[i].nome);
-            printf("PESSOA: %s\n", LISTA_PESSOAS[i].data_de_nascimento);
-            printf("PESSOA: %s\n", LISTA_PESSOAS[i].cpf);
-            printf("PESSOA: %s\n", LISTA_PESSOAS[i].email);
             printf("Erro ao ler linha %d do arquivo pessoas.txt\n", i + 1);
             limpar_memoria();
             fclose(arquivo_pessoas);
